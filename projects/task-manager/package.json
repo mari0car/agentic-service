@@ -1,0 +1,17 @@
+{
+  "name": "task-manager-example",
+  "version": "0.1.0",
+  "description": "Task Manager example for Agentic Service — demonstrates the tool-registry feature",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "tsx index.ts",
+    "migrate": "node --import tsx/esm ../../src/index.ts migrate up --config ./config.yaml",
+    "typecheck": "tsc --noEmit --project tsconfig.json"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "tsx": "^4.19.3",
+    "@types/node": "^22.15.3"
+  }
+}

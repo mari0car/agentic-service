@@ -1,0 +1,30 @@
+[09:37:31.147] [32mINFO[39m (93144): [36mStarting Task Manager (library mode)[39m
+    [35mprovider[39m: "bedrock"
+    [35mmodel[39m: "eu.anthropic.claude-sonnet-4-6"
+    [35mhandlers[39m: 6
+    [35mfailedHandlers[39m: 0
+[09:37:31.155] [32mINFO[39m (93144): [36mDatabase connected[39m
+    [35mdriver[39m: "sqlite"
+[09:37:31.155] [33mWARN[39m (93144): [36mSpecs directory not found[39m
+    [35mspecsDir[39m: "/Users/mario.cartsburg/projects/agentic-service/specs"
+[09:37:31.155] [32mINFO[39m (93144): [36mSpecs validated OK[39m
+    [35mrouteCount[39m: 0
+[09:37:31.155] [32mINFO[39m (93144): [36mRoute handler registry loaded[39m
+    [35mhandlers[39m: [
+      "projects/list",
+      "projects/get",
+      "tasks/list",
+      "tasks/get",
+      "tasks/create",
+      "auth/login"
+    ]
+    [35mshadowMode[39m: false
+    [35mshadowSampleRate[39m: 1
+[09:37:31.161] [32mINFO[39m (93144): [36mTask Manager ready[39m
+    [35mhost[39m: "0.0.0.0"
+    [35mport[39m: 8080
+    [35mroutes[39m: 0
+    [35mhandlers[39m: 6
+    [35mfailedHandlers[39m: 0
+[10:04:02.193] [32mINFO[39m (93144): [36mShutting down[39m
+    [35msignal[39m: "SIGTERM"

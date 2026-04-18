@@ -1,0 +1,256 @@
+# Task Manager API
+# VS Code REST Client (https://marketplace.visualstudio.com/items?itemName=humao.rest-client)
+#
+# How to use:
+#   1. Start the server:  cd examples/task-manager && ./start.sh
+#   2. Open this file in VS Code
+#   3. Run requests top-to-bottom — each "Send Request" link appears above every ###
+#   4. Responses that capture variables (register, login, create project/task)
+#      must be sent before requests that depend on them
+#
+# Variable capture: click "Send Request", then the captured values (@token,
+# @projectId, @taskId) become available for all requests below automatically.
+
+@baseUrl = http://localhost:8080
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# AUTH
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### Register — creates a new user and returns a JWT
+# @name register
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "alice@example.com",
+  "name": "Alice",
+  "password": "password123"
+}
+
+###
+
+# Token and user ID captured from the register response above.
+# Re-run "Login" below to refresh the token at any time.
+@registerToken = {{register.response.body.$.data.token}}
+@userId        = {{register.response.body.$.data.user.id}}
+
+### Login — returns a fresh JWT (run this after Register)
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "alice@example.com",
+  "password": "password123"
+}
+
+###
+
+# Use the login token for all authenticated requests below.
+# If you only ran Register (not Login), change {{token}} references to
+# {{registerToken}} or re-run Login to populate this variable.
+@token = {{login.response.body.$.data.token}}
+
+
+### Register — duplicate email → 409 Conflict
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "alice@example.com",
+  "name": "Alice",
+  "password": "password123"
+}
+
+### Register — invalid email → 400 Validation Error
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "not-an-email",
+  "name": "X",
+  "password": "password123"
+}
+
+### Register — short password → 400 Validation Error
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "bob@example.com",
+  "name": "Bob",
+  "password": "short"
+}
+
+### Login — wrong password → 401 Unauthorized
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "alice@example.com",
+  "password": "wrongpassword"
+}
+
+### Login — unknown email → 401 Unauthorized
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "nobody@example.com",
+  "password": "password123"
+}
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# PROJECTS
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### Create Project — returns the new project (captures @projectId)
+# @name createProject
+POST {{baseUrl}}/api/projects
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Alpha Project",
+  "description": "My first project"
+}
+
+###
+
+@projectId = {{createProject.response.body.$.data.id}}
+
+### List Projects — returns all projects owned by the authenticated user
+GET {{baseUrl}}/api/projects
+Authorization: Bearer {{token}}
+
+### List Projects — with pagination
+GET {{baseUrl}}/api/projects?page=1&per_page=10
+Authorization: Bearer {{token}}
+
+### Get Project — fetch a single project by ID
+GET {{baseUrl}}/api/projects/{{projectId}}
+Authorization: Bearer {{token}}
+
+### my test
+GET {{baseUrl}}/api/projects/ad0fbfef-3787-4ba6-b5c9-97408ca9eb48
+Authorization: Bearer {{token}}
+
+### Update Project — rename and change description
+PUT {{baseUrl}}/api/projects/{{projectId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Alpha Project (updated)",
+  "description": "Updated description"
+}
+
+### Projects — no auth → 401 Unauthorized
+GET {{baseUrl}}/api/projects
+
+### Get Project — non-existent ID → 404 Not Found
+GET {{baseUrl}}/api/projects/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{token}}
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# TASKS
+# Requires: @projectId captured from "Create Project" above
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### Create Task — high priority, captures @taskId
+# @name createTask
+POST {{baseUrl}}/api/projects/{{projectId}}/tasks
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "Build the UI",
+  "description": "Create all frontend components",
+  "priority": "high"
+}
+
+###
+
+@taskId = {{createTask.response.body.$.data.id}}
+
+### Create Task — with due date
+POST {{baseUrl}}/api/projects/{{projectId}}/tasks
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "Write documentation",
+  "description": "API reference and README",
+  "priority": "medium",
+  "due_date": "2026-12-31"
+}
+
+### List Tasks — all tasks in the project
+GET {{baseUrl}}/api/projects/{{projectId}}/tasks
+Authorization: Bearer {{token}}
+
+### my test
+GET {{baseUrl}}/api/projects/ad0fbfef-3787-4ba6-b5c9-97408ca9eb48/tasks
+Authorization: Bearer {{token}}
+
+### List Tasks — filter by status
+GET {{baseUrl}}/api/projects/{{projectId}}/tasks?status=todo
+Authorization: Bearer {{token}}
+
+### List Tasks — filter by priority
+GET {{baseUrl}}/api/projects/{{projectId}}/tasks?priority=high
+Authorization: Bearer {{token}}
+
+### Get Task — fetch a single task by ID
+GET {{baseUrl}}/api/projects/{{projectId}}/tasks/{{taskId}}
+Authorization: Bearer {{token}}
+
+### Update Task — change status to in_progress
+PUT {{baseUrl}}/api/projects/{{projectId}}/tasks/{{taskId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "status": "in_progress"
+}
+
+### Update Task — mark as done
+PUT {{baseUrl}}/api/projects/{{projectId}}/tasks/{{taskId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "status": "done"
+}
+
+### Update Task — change title and description
+PUT {{baseUrl}}/api/projects/{{projectId}}/tasks/{{taskId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "Build the UI (revised)",
+  "description": "Create all frontend components — revised scope"
+}
+
+### Tasks — no auth → 401 Unauthorized
+GET {{baseUrl}}/api/projects/{{projectId}}/tasks
+
+### Get Task — non-existent ID → 404 Not Found
+GET {{baseUrl}}/api/projects/{{projectId}}/tasks/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{token}}
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# HEALTH
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### Health check — always returns 200 { "status": "ok" }
+GET {{baseUrl}}/healthz
+
+### Readiness check — reports DB, specs, and LLM status
+GET {{baseUrl}}/readyz

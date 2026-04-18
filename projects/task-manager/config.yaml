@@ -1,0 +1,55 @@
+llm:
+  provider: "bedrock"
+  model: "eu.anthropic.claude-sonnet-4-6"
+  temperature: 0.0
+  max_output_tokens: 4096
+  max_tool_calls: 20
+  bedrock:
+    region: "eu-central-1"
+    profile: "bedrock"
+
+server:
+  port: 8081
+  request_timeout: 60s
+  cors:
+    enabled: true
+    allowed_origins:
+      - "http://localhost:3000"
+      - "http://localhost:5173"
+
+database:
+  # Uncomment for PostgreSQL:
+  # driver: "postgres"
+  # url: ""  # set AGENTIC_DATABASE_URL env var
+  #
+  # SQLite (zero-setup, great for trying it out):
+  driver: "sqlite"
+  url: "file:./taskmanager.db"
+  max_rows: 100
+  allow_ddl: true   # needed for migrations via the migrator
+  migrations:
+    directory: "./migrations"
+    auto_migrate: false
+
+specs:
+  directory: "./specs"
+  routes_file: "api-routes.md"
+  global_specs:
+    - "service.md"
+    - "domain.md"
+    - "data-model.md"
+    - "error-handling.md"
+    - "auth-policies.md"
+  watch: false
+
+auth:
+  jwt:
+    algorithm: "HS256"
+    expiry_seconds: 86400  # 24 hours
+    # secret: set via AGENTIC_AUTH_JWT_SECRET env var
+
+logging:
+  level: "info"
+  format: "text"
+  log_tool_calls: true
+  log_agent_traces: false
